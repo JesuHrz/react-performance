@@ -1,24 +1,33 @@
-import React from 'react'
-import styled from 'styled-components'
+import React, { useState } from 'react'
 
-const Input = styled.input`
-  padding: 2px 5px;
-  border: 1px solid black;
-  border-radius: 5px;
-  width: 261px;
-  height: 20px;
-`
+import './styles.css'
 
-function SearchInput ({ handleChange, placeholder }) {
+function SearchInput ({ onChange, placeholder }) {
+  const [value, setValue] = useState(0)
+
+  const handleSubmit = ev => {
+    ev.preventDefault()
+    onChange(value)
+  }
+
+  const handleChange = ({ target }) => {
+    if (target.value) {
+      setValue(target.value)
+      return
+    }
+    onChange('')
+  }
+
   return (
-    <Input
-      type='text'
-      onChange={handleChange}
-      placeholder={placeholder}
-    />
+    <form onSubmit={handleSubmit}>
+      <input
+        className='search'
+        type='text'
+        onChange={handleChange}
+        placeholder={placeholder}
+      />
+    </form>
   )
 }
 
-export {
-  SearchInput
-}
+export default React.memo(SearchInput)

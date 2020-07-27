@@ -25,6 +25,6 @@ function Character ({ name, image }) {
   )
 }
 
-export {
-  Character
-}
+export default React.memo(Character, (prevProps, newProps) => {
+  return prevProps.id === newProps.id
+})

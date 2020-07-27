@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Character } from './character'
+import Character from './character'
 
 function Characters ({ characters }) {
   return (
@@ -19,6 +19,4 @@ function Characters ({ characters }) {
   )
 }
 
-export {
-  Characters
-}
+export default Characters

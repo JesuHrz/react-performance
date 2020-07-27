@@ -1,8 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 
-function useNear (target, options = {
-  rootMargin: '500px'
-}) {
+function useNear (target, options = { rootMargin: '500px' }) {
   const [isNear, setIsNear] = useState(false)
   const ref = useRef()
 
@@ -21,7 +19,7 @@ function useNear (target, options = {
     const observer = new IntersectionObserver(onIntersection, options)
 
     if (elem) {
-      observer.observe(elem);
+      observer.observe(elem)
     }
 
     return () => observer && observer.disconnect()
