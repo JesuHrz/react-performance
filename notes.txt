@@ -1,0 +1,6 @@
+Ventajas:
+ - Evitar re-render.
+ - Uso correcto de los hooks.
+
+Desventajas:
+ - Requieren mucho tiempo.

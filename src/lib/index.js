@@ -3,19 +3,6 @@ import md5 from 'md5'
 const PUBLIC_KEY = 'a457653d25fcf3cb534e8f891e9c9165'
 const PRIVATE_KEY = 'ef8c6fdb0e133ee1cc59a4c4daa25b328337cd1e'
 
-function onIntersection (target, options = {}, cb) {
-  if (!target) return
-  const observer = new IntersectionObserver(entries => {
-    console.warn('entries', entries)
-    entries.map(entry => {
-      console.warn('entry', entry)
-      entry.isIntersecting && cb()
-    })
-  }, options)
-
-  observer.observe(target)
-}
-
 const getCharacter = character => {
   const { id, name, thumbnail, urls } = character
   const imageURL = `${thumbnail.path}/landscape_incredible.${thumbnail.extension}`
@@ -34,8 +21,17 @@ const generateURLWithHash = () => {
   return `ts=${ts}&apikey=${PUBLIC_KEY}&hash=${hash}`
 }
 
+const fetchCharacters = (url, callback) => {
+  return new Promise((resolve, reject) => {
+    fetch(url)
+      .then(res => res.json())
+      .then(res => resolve(res.data))
+      .catch(e => reject(e))
+  })
+}
+
 export {
-  onIntersection,
   getCharacter,
-  generateURLWithHash
+  generateURLWithHash,
+  fetchCharacters
 }

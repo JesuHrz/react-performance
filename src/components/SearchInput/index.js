@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import './styles.css'
 
 function SearchInput ({ onChange, placeholder }) {
-  const [value, setValue] = useState(0)
+  const [value, setValue] = useState('')
 
   const handleSubmit = ev => {
     ev.preventDefault()
@@ -15,6 +15,7 @@ function SearchInput ({ onChange, placeholder }) {
       setValue(target.value)
       return
     }
+    setValue('')
     onChange('')
   }
 
