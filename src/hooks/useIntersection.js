@@ -1,15 +1,16 @@
 import { useEffect, useState, useRef } from 'react'
 
-function useNear (target, options = { rootMargin: '500px' }) {
+function useIntersection (target, options = { rootMargin: '500px' }) {
   const [isNear, setIsNear] = useState(false)
   const ref = useRef()
+  const state = useRef(false)
 
   useEffect(() => {
     const elem = target ? target.current : ref.current
 
     const onIntersection = (entries, observer) => {
       const elem = entries[0]
-      if (elem.isIntersecting) {
+      if (elem.isIntersecting && !state.current) {
         setIsNear(true)
       } else {
         setIsNear(false)
@@ -29,5 +30,5 @@ function useNear (target, options = { rootMargin: '500px' }) {
 }
 
 export {
-  useNear
+  useIntersection
 }

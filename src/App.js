@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 
-import { useNear } from './hooks/useNear'
+import { useIntersection } from './hooks/useIntersection'
 
 import Characters from './components/Characters'
 import SearchInput from './components/SearchInput'
 
-import { getCharacter, generateURLWithHash } from './lib'
+import { getCharacter, generateURLWithHash, fetchCharacters } from './lib'
 
 import './App.css'
 
@@ -15,60 +15,57 @@ const API = 'http://gateway.marvel.com/v1'
 function App () {
   const [characters, setCharacters] = useState([])
   const [offset, setOffset] = useState(0)
-  const [character, loadCharacter] = useState('')
-  const [isNear, ref] = useNear()
+  const [character, setCharacter] = useState('')
+  const [isNear, ref] = useIntersection()
+  const isLoading = useRef(false)
 
-  const fetchCharacters = (url, type = 'characters') => {
-    fetch(url)
-      .then(res => res.json())
-      .then(({ data }) => {
-        const { results } = data
-
-        if (type === 'character') {
-          setOffset(0)
-          results.map(character => {
-            const data = getCharacter(character)
-            setCharacters([data])
-          })
-          return
-        }
-
-        setOffset(offset => offset + 8)
-        const characters = results.map(character => {
-          return getCharacter(character)
-        })
-        setCharacters(characters)
-      })
-      .catch(console.warn)
-  }
-
-  useEffect(() => {
+  const getCharacters = useCallback(() => {
     const urlHash = generateURLWithHash()
     const url = `${API}/public/characters?${urlHash}&limit=${LIMIT}&offset=${offset}`
+    isLoading.current = true
+
     fetchCharacters(url)
+      .then(({ results }) => {
+        setOffset(offset => offset + 8)
+        const data = results.map(character => getCharacter(character))
+        setCharacters(characters => [...characters, ...data])
+        isLoading.current = false
+      })
+      .catch(() => (isLoading.current = false))
+  }, [offset])
+
+  const getCharacterById = useCallback(character => {
+    const urlHash = generateURLWithHash()
+    const url = `${API}/public/characters/${character}?${urlHash}`
+    isLoading.current = true
+    fetchCharacters(url)
+      .then(({ results }) => {
+        setOffset(0)
+        const result = results.map(character => getCharacter(character))
+        setCharacters(result)
+        isLoading.current = false
+      })
+      .catch(() => (isLoading.current = false))
   }, [])
 
   useEffect(() => {
-    const urlHash = generateURLWithHash()
-
-    if (isNear && !character) {
-      const url = `${API}/public/characters?${urlHash}&limit=${LIMIT}&offset=${offset}`
-      fetchCharacters(url)
+    if (isNear && !character && !isLoading.current) {
+      getCharacters()
     }
 
-    if (character) {
-      const url = `${API}/public/characters/${character}?${urlHash}`
-      fetchCharacters(url, 'character')
+    if (character && !isLoading.current) {
+      getCharacterById(character)
     }
-  }, [isNear, character])
+  }, [isNear, character, getCharacters, getCharacterById, offset])
 
   const handleChange = useCallback((value) => {
     if (value) {
-      loadCharacter(value)
+      setCharacter(value) // 1011176 --- 1011334
       return
     }
-    loadCharacter('')
-    // 1011334
+    if (!offset) { setCharacters([]) }
+
+    setCharacter('')
   }, [])
 
   return (
@@ -81,7 +78,7 @@ function App () {
         characters={characters}
       />
       {
-        !character && (<div id='visor' ref={ref} />)
+        !(characters.length === 1) && (<div id='visor' ref={ref} />)
       }
     </div>
   )
