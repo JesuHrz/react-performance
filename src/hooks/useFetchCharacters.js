@@ -1,42 +1,75 @@
-import { useState } from 'react'
-import md5 from 'md5'
+import { useEffect, useState, useCallback } from 'react'
 
-const PUBLIC_KEY = 'a457653d25fcf3cb534e8f891e9c9165'
-const PRIVATE_KEY = 'ef8c6fdb0e133ee1cc59a4c4daa25b328337cd1e'
-const API = 'http://gateway.marvel.com/v1'
+import {
+  getCharacter,
+  generateURLWithHash,
+  fetchCharacters
+} from '../lib'
 
-const getCharacter = character => {
-  const { name, thumbnail } = character
-  const imageURL = `${thumbnail.path}/landscape_incredible.${thumbnail.extension}`
-  return {
-    name,
-    imageURL
-  }
-}
+const API = 'http://gateway.marvel.com/v1/public/characters'
 
-function useFetchCharacters (limit = 8, offset = 8, ) {
+function useFetchCharacters (limit = 8, offsetValue = 8) {
   const [characters, setCharacters] = useState([])
-  const [offsetCurrent, setOffsetCurrent] = useState(0)
+  const [offset, setOffset] = useState(false)
+  const [character, setCharacter] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  let ts = new Date().getTime()
-  let hash = md5(ts+PRIVATE_KEY+PUBLIC_KEY)
-  let url = `${API}/public/characters?ts=${ts}&apikey=${PUBLIC_KEY}&hash=${hash}&limit=${limit}&offset=${offsetCurrent}`
+  // 1011176 --- 1011334
 
-  const loadCharacters = () => {
-    fetch(url)
-    .then(res => res.json())
-    .then(({ data}) => {
-      const { results } = data
-      setOffsetCurrent(prevOffset => prevOffset + offset)
-      results.map(character => {
-        const data = getCharacter(character)
-        setCharacters(characters => [...characters, data])
+  const getCharacters = useCallback((id = null) => {
+    if (id === null && !character) return
+
+    if (typeof id === 'string') {
+      setCharacter(id)
+      return
+    }
+
+    if (!id && character) {
+      setCharacter('')
+      setCharacters([])
+      setOffset(0)
+      return
+    }
+
+    setOffset(prevOffset => prevOffset + offsetValue)
+    
+  }, [character, offsetValue])
+
+  useEffect(() => {
+    const urlHash = generateURLWithHash()
+    const url = `${API}/${character}?${urlHash}`
+
+    if (!character) return
+
+    setLoading(true)
+    if (character) {
+      fetchCharacters(url)
+      .then(({ results }) => {
+        const result = results.map(character => getCharacter(character))
+        setCharacters(result)
+        setLoading(false)
       })
-    })
-  }
+      .catch(() => (setLoading(false)))
+    }
 
+  }, [character])
 
-  return [characters, loadCharacters]
+  useEffect(() => {
+    const urlHash = generateURLWithHash()
+    const url = `${API}?${urlHash}&limit=${limit}&offset=${offset}`
+
+    setLoading(true)
+    fetchCharacters(url)
+      .then(({ results }) => {
+        const data = results.map(character => getCharacter(character))
+        setCharacters(characters => [...characters, ...data])
+        setLoading(false)
+      })
+      .catch(() => (setLoading(false)))
+
+  }, [offset, limit, offsetValue])
+
+  return [loading, characters, getCharacters]
 }
 
 export {

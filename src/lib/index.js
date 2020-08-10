@@ -21,7 +21,7 @@ const generateURLWithHash = () => {
   return `ts=${ts}&apikey=${PUBLIC_KEY}&hash=${hash}`
 }
 
-const fetchCharacters = (url, callback) => {
+const fetchCharacters = (url) => {
   return new Promise((resolve, reject) => {
     fetch(url)
       .then(res => res.json())
